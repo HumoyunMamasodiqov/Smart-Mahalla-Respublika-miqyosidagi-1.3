@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .btn-logout {
+            background: #dc3545;
+        }
+        .btn-logout:hover {
+            background: #c82333;
+        }
+        .viloyat-list {
+            margin-top: 30px;
+        }
+        .viloyat-item {
+            background: #f8f9fa;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border-left: 4px solid #007bff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .viloyat-name {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+            padding: 8px 15px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .btn-delete:hover {
+            background: #c82333;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏛️ Admin Panel - Viloyatlar</h1>
+            <a href="/logout" class="btn-logout" style="color: white; text-decoration: none; padding: 10px 20px; background: #dc3545; border-radius: 5px;">
+                Chiqish
+            </a>
+        </div>
+        
+        <!-- Yangi viloyat qo'shish formasi -->
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+            <h2>➕ Yangi viloyat qo'shish</h2>
+            <form action="/add_viloyat" method="POST">
+                <div class="form-group">
+                    <input type="text" name="name" placeholder="Viloyat nomini kiriting (masalan: Toshkent viloyati)" required>
+                </div>
+                <button type="submit">Viloyat qo'shish</button>
+            </form>
+        </div>
+
+        <!-- Viloyatlar ro'yxati -->
+        <div class="viloyat-list">
+            <h2>📋 Mavjud viloyatlar</h2>
+            
+            {% if viloyatlar %}
+                {% for viloyat in viloyatlar %}
+                <div class="viloyat-item">
+                    <span class="viloyat-name">{{ viloyat.name }}</span>
+                    <a href="/delete_viloyat/{{ viloyat.id }}" class="btn-delete" 
+                       onclick="return confirm('{{ viloyat.name }} viloyatini o\'chirishni istaysizmi?')">
+                        🗑️ O'chirish
+                    </a>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <h3>📭 Hozircha viloyatlar mavjud emas</h3>
+                    <p>Yuqoridagi forma orqali yangi viloyat qo'shing</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        // Formani yuborishdan keyin inputni tozalash
+        document.querySelector('form').addEventListener('submit', function() {
+            setTimeout(() => {
+                document.querySelector('input[name="name"]').value = '';
+            }, 100);
+        });
+    </script>
+</body>
+</html>
