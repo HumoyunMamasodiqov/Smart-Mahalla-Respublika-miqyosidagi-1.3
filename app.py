@@ -1,25 +1,23 @@
 from flask import Flask, render_template, request, redirect, url_for, jsonify, session
 from flask_sqlalchemy import SQLAlchemy
 import os
-import sqlite3
-import threading
 import requests
+import threading
 import asyncio
 from telegram import Update
 from telegram.ext import Application, CommandHandler, ContextTypes
 
 app = Flask(__name__)
 
-# SECRET_KEY ni siz o'zingiz qo'ying
-app.config['SECRET_KEY'] = 'humoyun-tezsot-2025'
-# Ma'lumotlar bazasi yo'lini o'zingiz qo'ying
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+# Render uchun environment variables
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'humoyun-tezsot-2025')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///database.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
 
-# Telegram bot tokeni
-BOT_TOKEN = "7623831722:AAF5IAakgWCKFr7Dc4VifTRiW_zLG1UJAHs"
+# Telegram bot tokeni environment variable dan
+BOT_TOKEN = os.environ.get('BOT_TOKEN', '7623831722:AAF5IAakgWCKFr7Dc4VifTRiW_zLG1UJAHs')
 
 # Viloyatlar modeli
 class Viloyat(db.Model):
@@ -168,8 +166,9 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def viloyatlar_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
-        # Flask serverdan viloyatlarni olish
-        response = requests.get('http://localhost:5000/api/viloyatlar')
+        # Render URL dan viloyatlarni olish
+        base_url = os.environ.get('RENDER_URL', 'http://localhost:5000')
+        response = requests.get(f'{base_url}/api/viloyatlar')
         
         if response.status_code == 200:
             viloyatlar = response.json()
@@ -214,20 +213,21 @@ if __name__ == '__main__':
     # Jadvallarni yaratish
     create_tables()
     
-    # Botni alohida threadda ishga tushirish
-    try:
-        bot_thread = threading.Thread(target=run_bot, daemon=True)
-        bot_thread.start()
-        print("✅ Bot thread ishga tushdi!")
-    except Exception as e:
-        print(f"❌ Bot threadida xatolik: {e}")
+    # Botni alohida threadda ishga tushirish (faqat localda)
+    if os.environ.get('RENDER') != 'true':
+        try:
+            bot_thread = threading.Thread(target=run_bot, daemon=True)
+            bot_thread.start()
+            print("✅ Bot thread ishga tushdi!")
+        except Exception as e:
+            print(f"❌ Bot threadida xatolik: {e}")
     
     # Flask serverni ishga tushirish
-    print("✅ Flask server ishga tushmoqda...")
-    print("✅ Admin panel: http://localhost:5000/admin")
+    port = int(os.environ.get('PORT', 5000))
+    print(f"✅ Flask server ishga tushmoqda... Port: {port}")
+    print("✅ Admin panel: /admin")
     print("✅ Login: admin")
     print("✅ Parol: admin123")
-    print("✅ API endpoint: http://localhost:5000/api/viloyatlar")
+    print("✅ API endpoint: /api/viloyatlar")
     
-    # Flask serverni ishga tushirish (reloader o'chirilgan)
-    app.run(debug=True, host='0.0.0.0', port=5000, use_reloader=False)
+    app.run(host='0.0.0.0', port=port, debug=False)
